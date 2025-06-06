@@ -1,0 +1,21 @@
+
+//@version=5
+indicator("Volume Adjusted Overlap ")
+
+Vlen = input.int(title="Volume Ma Length", defval=30)
+omv = input.int(title="Overlap sma length",defval=20)
+aol = input.int(title="Average Overlap ema length",defval=20)
+uplimit = input.float(title="correction index up limit", defval=0.8 )
+downlimit = input.float(title="correction index down limit", defval=0.5 )
+
+overlapAmount = math.max(0,math.min(high, high[1]) - math.max(low, low[1]))
+barAmount = high - low 
+overlap = overlapAmount /barAmount
+averageOverlap = ta.sma(overlap, omv)
+maxvma = ta.highest(ta.ema(volume,Vlen),Vlen)
+avgoverlapv = averageOverlap*maxvma/(ta.ema(volume,Vlen))
+
+plot(avgoverlapv, title= "correction index", color = color.rgb(28, 196, 247))
+plot(ta.ema(avgoverlapv, aol),title= "correction index ema ", color = color.rgb(231, 235, 47) )
+hline(uplimit)
+hline(downlimit)
