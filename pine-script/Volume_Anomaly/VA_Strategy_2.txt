@@ -1,0 +1,92 @@
+
+//@version=5
+strategy("Volume anomaly test 2", overlay=true , pyramiding = 10 , initial_capital=100,
+ backtest_fill_limits_assumption=2, slippage=1, commission_type=strategy.commission.percent, commission_value=0.05, 
+ max_lines_count=500, max_labels_count=500, max_boxes_count=500)
+
+length = input.int(title="Volume SMA length", defval=7)
+n = input.float(title="volume limit (ratio)", defval=3)
+maxrange = input.int(title="high/low Period", defval=15)
+minrange = input.int(title="max distance from hihi or lolo", defval=3)
+leverage = input.int(title="leverage", defval=10, group = "trade")
+profitperc = input.float(title="profit percent", defval=1, group = "trade")
+lossperc = input.float(title="loss percent", defval=2, group = "trade")
+trade_equity = input.int(title="trade equity", defval=100, group = "trade")
+percent_of_trade_equity = input.float(title="percent of equity in each trade", defval=50, group = "trade")
+
+Shortanomaly = false
+Longanomaly = false
+nothh = true
+notll = true
+holp = false //open long
+lohp = false //open short
+trade_qty = 0.0
+
+bodyLength = close - open
+volumeToBodyRatio = volume / bodyLength
+meanVolume = ta.sma(volume,length)
+meanbody = ta.sma(close-open,length)
+
+if volume > (n*meanVolume) and bodyLength > 0
+    if bodyLength < 2*meanbody/n 
+        Shortanomaly := true
+    //
+    if high-close > meanbody
+        Shortanomaly := true
+    //
+//
+if volume > (n*meanVolume) and bodyLength < 0
+    if bodyLength > 2*meanbody/n  
+        Longanomaly := true
+    //
+    if low-close < meanbody
+        Longanomaly := true
+    // 
+//
+
+//plot(volumeToBodyRatio, color=color.blue, title="Volume to Body Ratio", linewidth=2)
+plotshape(series=Shortanomaly, color=color.red, style=shape.triangledown, location=location.abovebar, size=size.small)
+plotshape(series=Longanomaly, color=color.green, style=shape.triangleup, location=location.belowbar, size=size.small)
+
+lowlo = ta.lowest(low, maxrange)
+highlo = ta.highest(high, maxrange)
+for i=1 to minrange
+    if high[i] == highlo 
+        nothh := false
+    if low[i] == lowlo
+        notll := false
+//
+trade_qty := (percent_of_trade_equity) *leverage* strategy.equity/100
+
+if close > high[1]
+    holp := true
+//
+if close < low[1]
+    lohp := true
+//
+
+// long
+if (Longanomaly and nothh)
+    if strategy.opentrades == 0  
+        strategy.entry("Long Entry", strategy.long, trade_qty/close , limit = close)
+        strategy.exit("Exit Long", from_entry="Long Entry", stop=(1- lossperc/100)*close )
+//
+if strategy.opentrades != 0 
+    if lohp
+        if close > strategy.opentrades.entry_price(0)*(1+ profitperc/200) 
+            strategy.exit("Exit Long", from_entry="Long Entry", limit = close )
+       
+//
+
+//short
+if (Shortanomaly and notll)
+    if strategy.opentrades == 0  
+        strategy.entry("short Entry", strategy.short, trade_qty/close , limit = close)
+        strategy.exit("Exit short", from_entry="short Entry", stop=(1+ lossperc/100)*close )
+//
+if strategy.opentrades != 0 
+    if holp
+        if close < strategy.opentrades.entry_price(0)*(1- profitperc/200)  
+            strategy.exit("Exit short", from_entry="short Entry", limit = close )
+        
+//
