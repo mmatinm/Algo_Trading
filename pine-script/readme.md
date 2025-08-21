@@ -10,3 +10,12 @@ An original indicator that measures price overlap between candles, adjusted usin
 ➡️ See the [VAO README](./volume-adjusted-overlap-(VAO)/readme.md) for full details.
 
 ---
+
+### [`Volume_Anomaly`](./Volume_Anomaly/)
+An indicator and two strategies designed to detect **unusual trading volume events** compared to recent averages.  
+The indicator highlights potential **trend reversals** or **breakouts** by marking anomalies with green (long) or red (short) triangles.  
+
+Two strategies are provided to showcase how these signals can be used in automated trading, each with different **exit conditions** and **risk management** rules.  
+➡️ See the [Volume Anomaly README](./Volume_Anomaly/readme.md) for full details.
+
+---
